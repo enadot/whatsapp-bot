@@ -28,12 +28,13 @@ async function startBot() {
       isReady = true;
       console.log("✅ מחובר לוואטסאפ בהצלחה!");
 
-      // שלוף קבוצות רק אחרי התחברות מלאה
+      // שלוף ושמור את הקבוצות בזיכרון
       const groups = await sock.groupFetchAllParticipating();
-      console.log(
-        "📦 קבוצות:",
-        Object.values(groups).map((g) => ({ name: g.subject, id: g.id }))
-      );
+      const formattedGroups = Object.values(groups).map((g) => ({
+        name: g.subject,
+        id: g.id,
+      }));
+      console.log("📦 קבוצות:", formattedGroups);
     }
   });
 
