@@ -54,10 +54,10 @@ async function startBot() {
       req.on("data", (chunk) => (body += chunk));
       req.on("end", async () => {
         try {
-          const { text } = JSON.parse(body);
-          if (!text) {
+          const { text, imagePath } = JSON.parse(body);
+          if (!text && !imagePath) {
             res.writeHead(400);
-            return res.end("Missing 'text' field");
+            return res.end("Missing 'text' or 'imagePath' field");
           }
 
           if (!isReady) {
@@ -65,12 +65,24 @@ async function startBot() {
             return res.end("⚠️ WhatsApp עדיין לא מחובר. נסה שוב בעוד רגע.");
           }
 
-          await sock?.sendMessage(groupJid, { text });
+          // שליחה עם תמונה (אם יש)
+          if (imagePath) {
+            const buffer = fs.readFileSync(imagePath);
+            await sock.sendMessage(groupJid, {
+              image: buffer,
+              caption: text || "",
+            });
+            res.writeHead(200, { "Content-Type": "text/plain" });
+            return res.end("✅ תמונה נשלחה");
+          }
+
+          // שליחה רגילה (טקסט בלבד)
+          await sock.sendMessage(groupJid, { text });
           res.writeHead(200, { "Content-Type": "text/plain" });
           res.end("✅ הודעה נשלחה");
           console.log("📤 נשלחה הודעה ידנית:", text);
         } catch (err) {
-          console.error("❌ שגיאה בשליחה:", err); // חשוב!
+          console.error("❌ שגיאה בשליחה:", err);
           res.writeHead(500);
           res.end("שגיאה פנימית");
         }
